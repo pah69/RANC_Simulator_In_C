@@ -46,7 +46,7 @@ void tb_input_line_process(const char *bitStream, tb_input_data *tb_input_data);
             k: pics number
             l: the index for data of pic k
 */
-void tb_input_to_array(int (*arr_tb_input)[2][4][100]); 
+void tb_input_to_array(int (*arr_tb_input)[2][10][200]); 
 
 int main()
 {
@@ -62,27 +62,28 @@ int main()
     #endif 
         
     // declair the arr[i][j][k][l] mention above 
-    int arr_tb_input[4][2][4][100] = {{{{0}}}};
+    int arr_tb_input[4][2][10][200] = {{{{0}}}};
 
     tb_input_to_array(arr_tb_input);
 
     #if (TEST == 3)
         FILE *fptr;
         fptr = fopen("test3.txt", "w");
-        // fprintf(fptr, "\n********\nTest tb_input array value\n********\n");
+        // fprintf(fptr, "arr_tb_input[1][0][1][0] = %u\n", arr_tb_input[1][0][1][0]);   
         for (int k = 0; k < 10; k++)
         {
             for (int i = 0; i < 4; i++)
             {
-                for (int l = 0; l < 100; l++)
+                for (int l = 0; l < 200; l++)
                 {
                     if (arr_tb_input[i][0][k][l] == '\0')
+                    {
                         break;
-                    fprintf(fptr, "arr_tb_input[%d][0][%d][%d] = %d\n", i, k, l, arr_tb_input[i][0][k][l]);        
+                    }
+                    fprintf(fptr, "arr_tb_input[%u][0][%u][%u] = %u\n", i, k, l, arr_tb_input[i][0][k][l]);        
                 }
             }
         }
-        // fprintf(fptr, "\n********\nEnd of test tb_input array value\n********\n");
         fclose(fptr);
     #endif 
 
@@ -143,8 +144,7 @@ void tb_input_line_process(const char *bitStream, tb_input_data *tb_input_data)
 }
 
 // 
-void tb_input_to_array(int (*arr_tb_input)[2][4][100])
-/* https://stackoverflow.com/questions/65649438/how-to-create-a-pointer-to-a-multi-dimensional-array-in-c */
+void tb_input_to_array(int (*arr_tb_input)[2][10][200])
 {
     FILE *tb_input_p;
     tb_input_p = fopen("tb_input.txt", "r");
@@ -154,7 +154,7 @@ void tb_input_to_array(int (*arr_tb_input)[2][4][100])
         return;
     } 
 
-    char line [30];
+    char line [31];
     tb_input_data tb_in_data;
     unsigned pic_num = 0;
     unsigned pic_index = 0;
@@ -162,7 +162,8 @@ void tb_input_to_array(int (*arr_tb_input)[2][4][100])
     unsigned _dx = 0;
 
     #if (TEST == 2)
-            printf("\n********\nTest tb_input reading\n********\n");
+        FILE *fptr;
+        fptr = fopen("test2.txt", "w");
     #endif
 
     #if (TEST == 22)
@@ -170,54 +171,39 @@ void tb_input_to_array(int (*arr_tb_input)[2][4][100])
         fptr = fopen("test22.txt", "w");
     #endif
 
-    while (fgets(line, sizeof(line), tb_input_p) != NULL)
+    while (fgets(line, 31, tb_input_p) != NULL)
     {
-        #if (TEST == 2)
-            int pic_change = 0;    
-        #endif
-        
         tb_input_line_process(line, &tb_in_data);
-
-        #if (TEST == 22)
-            fprintf(fptr, "Read line: %s\n", line);
-        #endif
 
         unsigned dx, dy, ad;
         dx = tb_in_data.dx;     
         dy = tb_in_data.dy;
         ad = tb_in_data.axon_destination;  
 
-        #if (TEST == 22)
-            fprintf(fptr, "Processed line: dx = %u, dy = %u, ad = %u\n", dx, dy, ad);
-        #endif
-
-        if (dx >= 4 || dy >= 2 || pic_num >= 4 || pic_index >= 100) {
-            #if (TEST == 22)
-                fprintf(fptr, "Invalid index values: dx = %u, dy = %u, pic_num = %u, pic_index = %u\n", dx, dy, pic_num, pic_index);
-            #endif
-            continue; // Bỏ qua dòng này nếu có chỉ số không hợp lệ
+        if (dx >= 4 || dy >= 2 || pic_num >= 10 || pic_index >= 200) {
+            continue;
         }
-
+        
         if ((_dx == 3) && (dx == 0) && (sum == arr_tb_num_inputs[pic_num]))
         {
             pic_num += 1;
             pic_index = 0;
             sum = 0;
-            #if (TEST == 2)
-                int pic_change = 1;    
-            #endif
         }
         else if (_dx != dx)
         {
             pic_index = 0;
         }
 
+        #if (TEST == 22)
+            // fprintf(fptr, "Read line: %s\n", line);
+            fprintf(fptr, "Processed line: dx = %u, dy = %u, ad = %u, pic = %u, pic_index = %u\n", dx, dy, ad, pic_num, pic_index);
+        #endif
+
         arr_tb_input[dx][dy][pic_num][pic_index] = ad;
 
         #if (TEST == 2)
-            printf("arr_tb_input[%d][%d][%d][%d] = %d\n", dx, dy, pic_num, pic_index, arr_tb_input[dx][dy][pic_num][pic_index]);
-            if (pic_change)
-                printf("\n");
+            fprintf(fptr, "arr_tb_input[%d][%d][%d][%d] = %d\n", dx, dy, pic_num, pic_index, arr_tb_input[dx][dy][pic_num][pic_index]);            
         #endif
 
         _dx = dx;
@@ -227,10 +213,11 @@ void tb_input_to_array(int (*arr_tb_input)[2][4][100])
 
     fclose(tb_input_p);
     #if (TEST == 22)
-            fprintf(fptr, "\nCLOSED FILE\n");
-            fclose(fptr);
-        #endif
+        fprintf(fptr, "\nCLOSED FILE\n");
+        fclose(fptr);
+    #endif
     #if (TEST == 2)
-        printf("\n********\nEnd of test tb_input\n********\n");
+        fprintf(fptr, "\nCLOSED FILE\n");
+        fclose(fptr);
     #endif
 }
