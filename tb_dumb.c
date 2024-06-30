@@ -6,7 +6,7 @@
 
 // khai bao cac const:
 #define NUM_tb_num_inputs 10  
-#define TEST 22
+#define TEST 3
 
 // khai bao cac bien global:
 int tb_num_inputs_index = 0;
@@ -67,7 +67,9 @@ int main()
     tb_input_to_array(arr_tb_input);
 
     #if (TEST == 3)
-        printf("\n********\nTest tb_input array value\n********\n");
+        FILE *fptr;
+        fptr = fopen("test3.txt", "w");
+        // fprintf(fptr, "\n********\nTest tb_input array value\n********\n");
         for (int k = 0; k < 10; k++)
         {
             for (int i = 0; i < 4; i++)
@@ -76,12 +78,12 @@ int main()
                 {
                     if (arr_tb_input[i][0][k][l] == '\0')
                         break;
-                    printf("arr_tb_input[%d][0][%d][%d] = %d\n", i, k, l, arr_tb_input[i][0][k][l]);        
+                    fprintf(fptr, "arr_tb_input[%d][0][%d][%d] = %d\n", i, k, l, arr_tb_input[i][0][k][l]);        
                 }
             }
         }
-        
-        printf("\n********\nEnd of test tb_input array value\n********\n");
+        // fprintf(fptr, "\n********\nEnd of test tb_input array value\n********\n");
+        fclose(fptr);
     #endif 
 
     return 0;
@@ -163,6 +165,11 @@ void tb_input_to_array(int (*arr_tb_input)[2][4][100])
             printf("\n********\nTest tb_input reading\n********\n");
     #endif
 
+    #if (TEST == 22)
+        FILE *fptr;
+        fptr = fopen("test22.txt", "w");
+    #endif
+
     while (fgets(line, sizeof(line), tb_input_p) != NULL)
     {
         #if (TEST == 2)
@@ -172,7 +179,7 @@ void tb_input_to_array(int (*arr_tb_input)[2][4][100])
         tb_input_line_process(line, &tb_in_data);
 
         #if (TEST == 22)
-            printf("Read line: %s\n", line);
+            fprintf(fptr, "Read line: %s\n", line);
         #endif
 
         unsigned dx, dy, ad;
@@ -181,12 +188,12 @@ void tb_input_to_array(int (*arr_tb_input)[2][4][100])
         ad = tb_in_data.axon_destination;  
 
         #if (TEST == 22)
-            printf("Processed line: dx = %u, dy = %u, ad = %u\n", dx, dy, ad);
+            fprintf(fptr, "Processed line: dx = %u, dy = %u, ad = %u\n", dx, dy, ad);
         #endif
 
         if (dx >= 4 || dy >= 2 || pic_num >= 4 || pic_index >= 100) {
             #if (TEST == 22)
-                printf("Invalid index values: dx = %u, dy = %u, pic_num = %u, pic_index = %u\n", dx, dy, pic_num, pic_index);
+                fprintf(fptr, "Invalid index values: dx = %u, dy = %u, pic_num = %u, pic_index = %u\n", dx, dy, pic_num, pic_index);
             #endif
             continue; // Bỏ qua dòng này nếu có chỉ số không hợp lệ
         }
@@ -220,7 +227,8 @@ void tb_input_to_array(int (*arr_tb_input)[2][4][100])
 
     fclose(tb_input_p);
     #if (TEST == 22)
-            printf("CLOSED FILE\n");
+            fprintf(fptr, "\nCLOSED FILE\n");
+            fclose(fptr);
         #endif
     #if (TEST == 2)
         printf("\n********\nEnd of test tb_input\n********\n");
