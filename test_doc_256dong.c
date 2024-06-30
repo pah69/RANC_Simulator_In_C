@@ -1,3 +1,10 @@
+/*
+    TEST number meaning:
+    5x: test related to csram_input
+        50: test value of csram_input array in main
+        51: test value of csram_input array in csram_to_array funciton
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,7 +12,7 @@
 
 // khai bao cac const:
 #define NUM_tb_num_inputs 10  
-#define TEST 0
+#define TEST 50
 
 // khai bao cac bien global:
 int tb_num_inputs_index = 0;
@@ -92,6 +99,22 @@ int main()
     csram_to_array("csram_002.mem", csram_input, 2);
     csram_to_array("csram_003.mem", csram_input, 3);
     csram_to_array("csram_004.mem", csram_input, 4);
+
+    #if (TEST == 50) 
+        // testing the correctness of csram_input array 
+        FILE *fptr;
+        fptr = fopen("test5.txt", "w");
+        
+        for (int csram_num = 0; csram_num <5; csram_num++)
+        {
+            for (int neuron_num = 0; neuron_num <256; neuron_num++)
+            {
+                fprintf(fptr, "csram_input[%u][%u] = %u\n", 
+                        csram_num, neuron_num, csram_input[csram_num][neuron_num]);
+            }
+        }                 
+        fclose(fptr);        
+    #endif
 
     printf("\nsos: %d, %d\n", arr_tb_input[0][0][0][0], arr_tb_input[0][0][1][0]);
 
