@@ -137,6 +137,7 @@ void tb_input_line_process(const char *bitStream, tb_input_data *tb_input_data)
     tb_input_data->axon_destination = bitsToUnsignedInt(bitStream + offset, 8);
     offset += 8;
     tb_input_data->tick_delivery = bitsToUnsignedInt(bitStream + offset, 4); 
+    offset += 4;
 }
 
 // 
@@ -182,6 +183,13 @@ void tb_input_to_array(int (*arr_tb_input)[2][4][100])
         #if (TEST == 22)
             printf("Processed line: dx = %u, dy = %u, ad = %u\n", dx, dy, ad);
         #endif
+
+        if (dx >= 4 || dy >= 2 || pic_num >= 4 || pic_index >= 100) {
+            #if (TEST == 22)
+                printf("Invalid index values: dx = %u, dy = %u, pic_num = %u, pic_index = %u\n", dx, dy, pic_num, pic_index);
+            #endif
+            continue; // Bỏ qua dòng này nếu có chỉ số không hợp lệ
+        }
 
         if ((_dx == 3) && (dx == 0) && (sum == arr_tb_num_inputs[pic_num]))
         {
