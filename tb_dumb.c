@@ -144,7 +144,7 @@ void tb_input_line_process(const char *bitStream, tb_input_data *tb_input_data)
     offset += 4;
 }
 
-// 
+// ham chuyen tb_input thanh array
 void tb_input_to_array(int arr_tb_input[4][2][10][200])
 {
     FILE *tb_input_p;
