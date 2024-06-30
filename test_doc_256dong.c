@@ -206,14 +206,17 @@ int main() {
     unsigned int *input[10][4]={NULL};
     processInput(input, tb_num_input, num_input);
 
+    CSRAM csram_input[5][256];
+    char line[369]; // 368 bits + 1 for null terminator
+
     FILE *file = fopen("csram_000.mem", "r");
     if (file == NULL) {
         perror("Failed to open file");
         return 1;
     }
 
-    char line[369]; // 368 bits + 1 for null terminator
-    CSRAM csram_input[5][256];
+    
+
 
     while (fgets(line, sizeof(line), file) != NULL) {
         // Xử lý từng dòng
@@ -244,8 +247,157 @@ int main() {
         
        k++;
     }
-
     fclose(file);
+
+    file = fopen("csram_001.mem", "r");
+    if (file == NULL) {
+        perror("Failed to open file");
+        return 1;
+    }
+
+    while (fgets(line, sizeof(line), file) != NULL) {
+        // Xử lý từng dòng
+        int k = 0;
+        processLine(line, &csram_input[1][k]);
+
+        // In các giá trị trong cấu trúc để kiểm tra
+       // printf("Synapse Connection: ");
+        for (int i = 0; i < 32; i++) {
+            //printf("%02X", (unsigned char)csram_input[0][k].synapse_connection[i]);
+        }
+       //printf("\n");
+
+        //printf("Current Potential: %u\n", csram.current_potential);
+       // printf("Reset Potential: %u\n", csram.reset_potential);
+        for (int i = 0; i < 4; i++) {
+           //printf("Weight[%d]: %u\n", i, csram.weight[i]);
+        }
+        //printf("Leak value: %u\n", csram.leak_value);
+        //printf("Positive Threshold: %u\n", csram.positive_threshold);
+        //printf("Negative Threshold: %u\n", csram.negative_threshold);
+        //printf("Reset Mode: %u\n", csram.reset_mode);
+        //printf("dx: %u", csram_input[0][k].dy);
+        // printf("dy: %u\n", csram.dy);
+        // printf("Axons destination: %u\n", csram.axon_destination);
+        // printf("Tick Delivery: %u\n", csram.tick_delivery);
+        // printf("\n");
+        
+       k++;
+    }
+    fclose(file);
+
+    file = fopen("csram_002.mem", "r");
+    if (file == NULL) {
+        perror("Failed to open file");
+        return 1;
+    }
+
+    while (fgets(line, sizeof(line), file) != NULL) {
+        // Xử lý từng dòng
+        int k = 0;
+        processLine(line, &csram_input[2][k]);
+
+        // In các giá trị trong cấu trúc để kiểm tra
+       // printf("Synapse Connection: ");
+        for (int i = 0; i < 32; i++) {
+            //printf("%02X", (unsigned char)csram_input[0][k].synapse_connection[i]);
+        }
+       //printf("\n");
+
+        //printf("Current Potential: %u\n", csram.current_potential);
+       // printf("Reset Potential: %u\n", csram.reset_potential);
+        for (int i = 0; i < 4; i++) {
+           //printf("Weight[%d]: %u\n", i, csram.weight[i]);
+        }
+        //printf("Leak value: %u\n", csram.leak_value);
+        //printf("Positive Threshold: %u\n", csram.positive_threshold);
+        //printf("Negative Threshold: %u\n", csram.negative_threshold);
+        //printf("Reset Mode: %u\n", csram.reset_mode);
+        //printf("dx: %u", csram_input[0][k].dy);
+        // printf("dy: %u\n", csram.dy);
+        // printf("Axons destination: %u\n", csram.axon_destination);
+        // printf("Tick Delivery: %u\n", csram.tick_delivery);
+        // printf("\n");
+        
+       k++;
+    }
+    fclose(file);
+
+    file = fopen("csram_003.mem", "r");
+    if (file == NULL) {
+        perror("Failed to open file");
+        return 1;
+    }
+
+    while (fgets(line, sizeof(line), file) != NULL) {
+        // Xử lý từng dòng
+        int k = 0;
+        processLine(line, &csram_input[3][k]);
+
+        // In các giá trị trong cấu trúc để kiểm tra
+       // printf("Synapse Connection: ");
+        for (int i = 0; i < 32; i++) {
+            //printf("%02X", (unsigned char)csram_input[0][k].synapse_connection[i]);
+        }
+       //printf("\n");
+
+        //printf("Current Potential: %u\n", csram.current_potential);
+       // printf("Reset Potential: %u\n", csram.reset_potential);
+        for (int i = 0; i < 4; i++) {
+           //printf("Weight[%d]: %u\n", i, csram.weight[i]);
+        }
+        //printf("Leak value: %u\n", csram.leak_value);
+        //printf("Positive Threshold: %u\n", csram.positive_threshold);
+        //printf("Negative Threshold: %u\n", csram.negative_threshold);
+        //printf("Reset Mode: %u\n", csram.reset_mode);
+        //printf("dx: %u", csram_input[0][k].dy);
+        // printf("dy: %u\n", csram.dy);
+        // printf("Axons destination: %u\n", csram.axon_destination);
+        // printf("Tick Delivery: %u\n", csram.tick_delivery);
+        // printf("\n");
+        
+       k++;
+    }
+    fclose(file);
+
+    file = fopen("csram_004.mem", "r");
+    if (file == NULL) {
+        perror("Failed to open file");
+        return 1;
+    }
+
+    while (fgets(line, sizeof(line), file) != NULL) {
+        // Xử lý từng dòng
+        int k = 0;
+        processLine(line, &csram_input[4][k]);
+
+        // In các giá trị trong cấu trúc để kiểm tra
+       // printf("Synapse Connection: ");
+        for (int i = 0; i < 32; i++) {
+            //printf("%02X", (unsigned char)csram_input[0][k].synapse_connection[i]);
+        }
+       //printf("\n");
+
+        //printf("Current Potential: %u\n", csram.current_potential);
+       // printf("Reset Potential: %u\n", csram.reset_potential);
+        for (int i = 0; i < 4; i++) {
+           //printf("Weight[%d]: %u\n", i, csram.weight[i]);
+        }
+        //printf("Leak value: %u\n", csram.leak_value);
+        //printf("Positive Threshold: %u\n", csram.positive_threshold);
+        //printf("Negative Threshold: %u\n", csram.negative_threshold);
+        //printf("Reset Mode: %u\n", csram.reset_mode);
+        //printf("dx: %u", csram_input[0][k].dy);
+        // printf("dy: %u\n", csram.dy);
+        // printf("Axons destination: %u\n", csram.axon_destination);
+        // printf("Tick Delivery: %u\n", csram.tick_delivery);
+        // printf("\n");
+        
+       k++;
+    }
+    fclose(file);
+
+
     printf("\nsos: %d, %d\n", input[0][0][0], input[0][1][0]);
     //CSRAM csram_input[5][256]={0};
     //printf("\n%d\n", csram_input[0][1].dx);
