@@ -46,7 +46,7 @@ void tb_input_line_process(const char *bitStream, tb_input_data *tb_input_data);
             k: pics number
             l: the index for data of pic k
 */
-void tb_input_to_array(int (*arr_tb_input)[2][10][200]); 
+void tb_input_to_array(int arr_tb_input[4][2][10][200]); 
 
 int main()
 {
@@ -76,8 +76,9 @@ int main()
             {
                 for (int l = 0; l < 200; l++)
                 {
-                    if (arr_tb_input[i][0][k][l] == '\0')
+                    if ((arr_tb_input[i][0][k][l] == '\0') && (l != 0))
                     {
+                        printf("break at: [%u][0][%u][%u] = %u\n", i, k, l, arr_tb_input[i][0][k][l]);
                         break;
                     }
                     fprintf(fptr, "arr_tb_input[%u][0][%u][%u] = %u\n", i, k, l, arr_tb_input[i][0][k][l]);        
@@ -144,7 +145,7 @@ void tb_input_line_process(const char *bitStream, tb_input_data *tb_input_data)
 }
 
 // 
-void tb_input_to_array(int (*arr_tb_input)[2][10][200])
+void tb_input_to_array(int arr_tb_input[4][2][10][200])
 {
     FILE *tb_input_p;
     tb_input_p = fopen("tb_input.txt", "r");
