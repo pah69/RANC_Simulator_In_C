@@ -21,6 +21,6 @@ void bitsToByteArray(const char *bits, char *byteArray, int byteArrayLength) {
 
 int main()
 {
-    
+
     return 0;
 }
