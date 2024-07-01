@@ -132,19 +132,14 @@ int main()
     #endif
 
     int output[10][10];
-    for(int k = 0; k<10; k++)
-    {
+    for(int k = 0; k<10; k++){
         int input_last[256]={0};
         int num_input_last=0;
-        // đọc input
-        // xử lí
-        // int *output=Neuron_Net(csram_input, &input[0][0], num_input);
-        // printf("%d\n", num_input[4]);
         int output_core[5][256]={0};
         for(int i = 0; i<4; i++){
-            // printf("num_input[%d][%d] = %d\n", k, i, num_input[k][i]);
+            
             for(int j = 0; j<64;j++){
-                output_core[i][j]=NeuronBlock(csram_input[i][j], arr_tb_input[i][0][k]);
+                output_core[i][j]=NeuronBlock(&csram_input[i][j], input[k][i], num_input_per_core[k][i]);
                 if(output_core[i][j]==1){
                     input_last[num_input_last]=i*64+j;
                     num_input_last++;
@@ -152,12 +147,11 @@ int main()
             }
         }
         for(int i = 0;i<250;i++){
-            output_core[4][i]=NeuronBlock(csram_input[4][i], input_last);
+            output_core[4][i]=NeuronBlock(&csram_input[4][i], input_last, num_input_last);
             if(output_core[4][i]==1){
                 output[k][i%10]++;
             }
         }
-        //viết file output_core ra file txt;
         printf("vote voi so %d: ", k);
         for(int j = 0; j<10; j++){
             printf("%d ", output[k][j]);
@@ -303,7 +297,7 @@ void processLine(const char *bitStream, CSRAM *csram)
 
 void csram_to_array(char *filename, CSRAM csram_input[5][256], unsigned csram_num)
 {
-    char line[369]; // 368 bits + 1 for null terminator
+    char line[371]; // 368 bits + '\n' + '\0' + một bit đâu cho vui
 
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
@@ -311,9 +305,17 @@ void csram_to_array(char *filename, CSRAM csram_input[5][256], unsigned csram_nu
         return;
     }
 
-    while (fgets(line, sizeof(line), file) != NULL) {
-        // Xử lý từng dòng
-        int k = 0;
+    int k = 0;
+    while (fgets(line, sizeof(line), file) != NULL) 
+    {        
+        // if (line[0] == 10) {
+        //     // Nếu ký tự đầu dòng là newline, di chuyển con trỏ chuỗi
+        //     for(int i = 0; i < 368; i++){
+        //         line[i] = line[i+2];
+        //     }
+        // }
+        // //printf("%d ", line[0]);
+        // line[strcspn(line, "\n")]='\0';
         processLine(line, &csram_input[csram_num][k]);
         k++;
     }
@@ -366,7 +368,7 @@ void tb_input_to_array(unsigned int *input[10][4], int tb_num_input[], int *num_
                 In this application, the input only go into dy = 0 so whe can totally just
                 mind dx or in this case it's called core and have range of [0;3] 
             */
-            char line[31];   
+            char line[32];   
             while (fgets(line, sizeof(line), tb_input_p) != NULL)
             {
                 int core = bitsToUnsignedInt(line, 9);
