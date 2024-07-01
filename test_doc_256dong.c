@@ -2,54 +2,60 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <math.h>
 
 typedef struct {
-    uint8_t synapse_connection[32]; // 256 bits (32 bytes)
-    uint16_t current_potential; // 9 bits
-    uint16_t reset_potential; // 9 bits
-    uint16_t weight[4]; // 4 x 9 bits
-    uint16_t leak_value; // 9 bits
-    uint16_t positive_threshold; // 9 bits
-    uint16_t negative_threshold; // 9 bits
-    uint8_t reset_mode; // 1 bit
+    int synapse_connection[256]; // 256 bits (32 bytes)
+    int16_t current_potential; // 9 bits
+    int16_t reset_potential; // 9 bits
+    int16_t weight[4]; // 4 x 9 bits
+    int16_t leak_value; // 9 bits
+    int16_t positive_threshold; // 9 bits
+    int16_t negative_threshold; // 9 bits
+    int8_t reset_mode; // 1 bit
     //spike_destination; 26 bit 
     // dx + dy + axon_destination = 9 + 9 + 8
-    uint16_t dx; // 9 bit
-    uint16_t dy; // 9 bit
-    uint8_t axon_destination; // 8 bit
-    uint8_t tick_delivery; // 4 bits
+    int16_t dx; // 9 bit
+    int16_t dy; // 9 bit
+    int8_t axon_destination; // 8 bit
+    int8_t tick_delivery; // 4 bits
 } CSRAM;
 
-unsigned int NeuronBlock(CSRAM csram, int *input, int8_t num_of_input){
+unsigned int NeuronBlock(CSRAM *csram, int input[], int8_t num_of_input){
     int pre_ff, output;
     int ff=0;
     int negative_check, positive_check;
+    if (num_of_input==0)
+    {
+        return 0;
+    }
+    
     for(int i = 0; i<num_of_input;i++){
         pre_ff=ff;
-        int process = csram.synapse_connection[input[i]];
+        int process = csram->synapse_connection[input[i]];
+        //printf("%d ", process);
         if(process == 0){
             continue;
         }else{
             int weight;
             if(input[i]%2==0){
-                weight = csram.weight[0];
+                weight = csram->weight[0];
             }else{
-                weight = csram.weight[1];
+                weight = csram->weight[1];
             }
             ff = weight + pre_ff;
         }
-        printf("\n");
     }
-    int value = ff+csram.leak_value;
+    int value = ff+csram->leak_value;
 
-    if(value > csram.positive_threshold){
-        output=1;
+    if(value > csram->positive_threshold){
+        return 1;
         //printf("co xung ne \n");
     }
     else{
-        output=0;
+        return 0;
     }
-    return output;
+    return 0;
 }
 
 // int *Neuron_Net(CSRAM csram[][256], int8_t *input[],int8_t *num_input){
@@ -82,6 +88,19 @@ unsigned int bitsToUnsignedInt(const char *bits, int length) {
     unsigned int value = 0;
     for (int i = 0; i < length; i++) {
         value = (value << 1) | (bits[i] - '0');
+    }
+    return value;
+}
+
+signed int bitsToSignedInt(const char *bits, int length) {
+    signed int value = 0;
+    for (int i = 1; i < length; i++) {
+        if(bits[i]=='1'){
+            value+=pow(2, length-i-1);
+        }
+    }
+    if(bits[0]=='1'){
+        value=-pow(2, length-1)+value;
     }
     return value;
 }
@@ -148,50 +167,65 @@ void processInput(unsigned int *input[10][4], int tb_num_input[], int *num_input
 
 void processLine(const char *bitStream, CSRAM *csram) {
     int start = 0;
-
+    //printf("%c ", bitStream[1]);
     // Đọc 256 bit cho synapse_connection
-    bitsToByteArray(bitStream + start, csram->synapse_connection, 32);
+    //bitsToByteArray(bitStream + start, csram->synapse_connection, 32);
+    for(int i = 0;i<256;i++){
+        // printf("%d ", bitStream[i]);
+        if (bitStream[i] == 49)
+        {
+            csram->synapse_connection[256-i-1]=1;
+        } else if (bitStream[i]==48){
+            csram->synapse_connection[256-i-1]=0;
+        }
+        
+        //csram->synapse_connection[i] = bitsToUnsignedInt(bitStream+start, 1);
+        //printf("%d ", csram->synapse_connection[i]);
+        //start+=8;
+    }
     start += 256;
 
     // Đọc 9 bit cho current_potential
-    csram->current_potential = bitsToUnsignedInt(bitStream + start, 9);
+    csram->current_potential = bitsToSignedInt(bitStream + start, 9);
     start += 9;
 
     // Đọc 9 bit cho reset_potential
-    csram->reset_potential = bitsToUnsignedInt(bitStream + start, 9);
+    csram->reset_potential = bitsToSignedInt(bitStream + start, 9);
     start += 9;
 
     // Đọc 4 x 9 bit cho weight[0] đến weight[3]
     for (int i = 0; i < 4; i++) {
-        csram->weight[i] = bitsToUnsignedInt(bitStream + start, 9);
+        csram->weight[i] = bitsToSignedInt(bitStream + start, 9);
         start += 9;
+        //if(i==1) printf("weight: %d ", csram->weight[i]);
     }
 
     // Đọc 9 bit cho leak_value
-    csram->leak_value = bitsToUnsignedInt(bitStream + start, 9);
+    csram->leak_value = bitsToSignedInt(bitStream + start, 9);
     start += 9;
 
     // Đọc 9 bit cho positive_threshold
-    csram->positive_threshold = bitsToUnsignedInt(bitStream + start, 9);
+    csram->positive_threshold = bitsToSignedInt(bitStream + start, 9);
     start += 9;
 
     // Đọc 9 bit cho negative_threshold
-    csram->negative_threshold = bitsToUnsignedInt(bitStream + start, 9);
+    csram->negative_threshold = bitsToSignedInt(bitStream + start, 9);
     start += 9;
 
     // Đọc 1 bit cho reset_mode
-    csram->reset_mode = bitsToUnsignedInt(bitStream + start, 1);
+    csram->reset_mode = bitsToSignedInt(bitStream + start, 1);
     start += 1;
 
     // Đọc 26 bit cho spike_destination, dx, dy 9 bit each; 8 bit cho axon_destination
-    csram->dx = bitsToUnsignedInt(bitStream + start, 9);
+    csram->dx = bitsToSignedInt(bitStream + start, 9);
     start += 9;
-    csram->dy = bitsToUnsignedInt(bitStream + start, 9);
+    csram->dy = bitsToSignedInt(bitStream + start, 9);
     start += 9;
-    csram->axon_destination = bitsToUnsignedInt(bitStream + start, 9);
+    csram->axon_destination = bitsToSignedInt(bitStream + start, 8);
     start += 8;
-    // Đọc 4 bit cho tick_delivery
-    csram->tick_delivery = bitsToUnsignedInt(bitStream + start, 4);
+    //printf("%d ", csram->axon_destination);
+    //Đọc 4 bit cho tick_delivery
+    csram->tick_delivery = bitsToSignedInt(bitStream + start, 4);
     start += 4;
 }
 
@@ -207,20 +241,27 @@ int main() {
     processInput(input, tb_num_input, num_input);
 
     CSRAM csram_input[5][256];
-    char line[369]; // 368 bits + 1 for null terminator
-
+    char line[371]; // 368 bits + 1 for null terminator
+    {
     FILE *file = fopen("csram_000.mem", "r");
     if (file == NULL) {
         perror("Failed to open file");
         return 1;
     }
 
-    
-
+    int k = 0;   
 
     while (fgets(line, sizeof(line), file) != NULL) {
         // Xử lý từng dòng
-        int k = 0;
+        if (line[0] == 10) {
+            // Nếu ký tự đầu dòng là newline, di chuyển con trỏ chuỗi
+            for(int i = 0; i<368;i++){
+                line[i]=line[i+2];
+            }
+        }
+        //printf("%d ", line[0]);
+        line[strcspn(line, "\n")]='\0';
+        
         processLine(line, &csram_input[0][k]);
 
         // In các giá trị trong cấu trúc để kiểm tra
@@ -245,19 +286,31 @@ int main() {
         // printf("Tick Delivery: %u\n", csram.tick_delivery);
         // printf("\n");
         
-       k++;
+        k++;
     }
     fclose(file);
+    }
 
-    file = fopen("csram_001.mem", "r");
+    {
+    FILE *file = fopen("csram_001.mem", "r");
     if (file == NULL) {
         perror("Failed to open file");
         return 1;
     }
 
+    int k = 0;   
+
     while (fgets(line, sizeof(line), file) != NULL) {
         // Xử lý từng dòng
-        int k = 0;
+        if (line[0] == 10) {
+            // Nếu ký tự đầu dòng là newline, di chuyển con trỏ chuỗi
+            for(int i = 0; i<368;i++){
+                line[i]=line[i+2];
+            }
+        }
+        //printf("%d ", line[0]);
+        line[strcspn(line, "\n")]='\0';
+        
         processLine(line, &csram_input[1][k]);
 
         // In các giá trị trong cấu trúc để kiểm tra
@@ -282,19 +335,31 @@ int main() {
         // printf("Tick Delivery: %u\n", csram.tick_delivery);
         // printf("\n");
         
-       k++;
+        k++;
     }
     fclose(file);
+    }
 
-    file = fopen("csram_002.mem", "r");
+    {
+    FILE *file = fopen("csram_002.mem", "r");
     if (file == NULL) {
         perror("Failed to open file");
         return 1;
     }
 
+    int k = 0;   
+
     while (fgets(line, sizeof(line), file) != NULL) {
         // Xử lý từng dòng
-        int k = 0;
+        if (line[0] == 10) {
+            // Nếu ký tự đầu dòng là newline, di chuyển con trỏ chuỗi
+            for(int i = 0; i<368;i++){
+                line[i]=line[i+2];
+            }
+        }
+        //printf("%d ", line[0]);
+        line[strcspn(line, "\n")]='\0';
+        
         processLine(line, &csram_input[2][k]);
 
         // In các giá trị trong cấu trúc để kiểm tra
@@ -319,19 +384,31 @@ int main() {
         // printf("Tick Delivery: %u\n", csram.tick_delivery);
         // printf("\n");
         
-       k++;
+        k++;
     }
     fclose(file);
+    }
 
-    file = fopen("csram_003.mem", "r");
+    {
+    FILE *file = fopen("csram_003.mem", "r");
     if (file == NULL) {
         perror("Failed to open file");
         return 1;
     }
 
+    int k = 0;   
+
     while (fgets(line, sizeof(line), file) != NULL) {
         // Xử lý từng dòng
-        int k = 0;
+        if (line[0] == 10) {
+            // Nếu ký tự đầu dòng là newline, di chuyển con trỏ chuỗi
+            for(int i = 0; i<368;i++){
+                line[i]=line[i+2];
+            }
+        }
+        //printf("%d ", line[0]);
+        line[strcspn(line, "\n")]='\0';
+        
         processLine(line, &csram_input[3][k]);
 
         // In các giá trị trong cấu trúc để kiểm tra
@@ -356,19 +433,31 @@ int main() {
         // printf("Tick Delivery: %u\n", csram.tick_delivery);
         // printf("\n");
         
-       k++;
+        k++;
     }
     fclose(file);
+    }
 
-    file = fopen("csram_004.mem", "r");
+    {
+    FILE *file = fopen("csram_004.mem", "r");
     if (file == NULL) {
         perror("Failed to open file");
         return 1;
     }
 
+    int k = 0;   
+
     while (fgets(line, sizeof(line), file) != NULL) {
         // Xử lý từng dòng
-        int k = 0;
+        if (line[0] == 10) {
+            // Nếu ký tự đầu dòng là newline, di chuyển con trỏ chuỗi
+            for(int i = 0; i<368;i++){
+                line[i]=line[i+2];
+            }
+        }
+        //printf("%d ", line[0]);
+        line[strcspn(line, "\n")]='\0';
+        
         processLine(line, &csram_input[4][k]);
 
         // In các giá trị trong cấu trúc để kiểm tra
@@ -393,12 +482,19 @@ int main() {
         // printf("Tick Delivery: %u\n", csram.tick_delivery);
         // printf("\n");
         
-       k++;
+        k++;
     }
     fclose(file);
+    }
 
 
-    printf("\nsos: %d, %d\n", input[0][0][0], input[0][1][0]);
+
+    // printf("csram0 connection: ");
+    // for(int i = 0;i<256;i++){
+    //     printf("%d ", csram_input[0][0].synapse_connection[i]);
+    // }
+
+    // printf("\nsos: %d, %d\n", input[0][0][0], input[0][1][0]);
     //CSRAM csram_input[5][256]={0};
     //printf("\n%d\n", csram_input[0][1].dx);
     int output[10][10];
@@ -411,17 +507,22 @@ int main() {
         //printf("%d\n", num_input[4]);
         int output_core[5][256]={0};
         for(int i = 0; i<4; i++){
-            //printf("num_input[%d][%d] = %d\n", k, i, num_input[k][i]);
+            //printf("\nnum_input[%d][%d] = %d\n", k, i, num_input[k][i]);
             for(int j = 0; j<64;j++){
-                output_core[i][j]=NeuronBlock(csram_input[i][j], input[k][i], num_input[k][i]);
+                // printf("\nconnection: ");
+                // for(int m=0;m<256;m++){
+                //     printf("%d", csram_input[i][j].synapse_connection[m]);
+                // }
+                output_core[i][j]=NeuronBlock(&csram_input[i][j], input[k][i], num_input[k][i]);
                 if(output_core[i][j]==1){
                     input_last[num_input_last]=i*64+j;
                     num_input_last++;
                 }
             }
         }
+        // printf("so input: %d ", num_input_last);
         for(int i = 0;i<250;i++){
-            output_core[4][i]=NeuronBlock(csram_input[4][i], input_last, num_input_last);
+            output_core[4][i]=NeuronBlock(&csram_input[4][i], input_last, num_input_last);
             if(output_core[4][i]==1){
                 output[k][i%10]++;
             }
