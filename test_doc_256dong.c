@@ -58,36 +58,23 @@ unsigned int NeuronBlock(CSRAM *csram, int input[], int8_t num_of_input){
     return 0;
 }
 
-// int *Neuron_Net(CSRAM csram[][256], int8_t *input[],int8_t *num_input){
-//     static int output[10]={0};
-//     unsigned int output_core[5][256];
-//     for(int i = 0; i<4; i++){
-//         for(int j = 0; j<64;j++){
-//             output_core[i][j]=NeuronBlock(csram[i][j], input[i], num_input[i]);
-//             if(output_core[i][j]==1){
-//                 input[4][num_input[4]]=i*64+j;
-//                 num_input[4]++;
-//             }
-//         }
-//     }
-//     for(int i = 0;i<250;i++){
-//         output_core[4][i]=NeuronBlock(csram[4][i], input[4], num_input[4]);
-//         if(output_core[4][i]==1){
-//             output[i%10]++;
-//         }
-//     }
-//         //viết file output_core ra file txt;
-//     output[0]=2;
-//     return output;
-// }
-
 
 
 // Hàm để chuyển đổi chuỗi bit thành giá trị số nguyên
+// unsigned int bitsToUnsignedInt(const char *bits, int length) {
+//     unsigned int value = 0;
+//     for (int i = 0; i < length; i++) {
+//         value = (value << 1) | (bits[i] - '0');
+//     }
+//     return value;
+// }
+
 unsigned int bitsToUnsignedInt(const char *bits, int length) {
-    unsigned int value = 0;
+    signed int value = 0;
     for (int i = 0; i < length; i++) {
-        value = (value << 1) | (bits[i] - '0');
+        if(bits[i]=='1'){
+            value+=pow(2, length-i-1);
+        }
     }
     return value;
 }
@@ -118,8 +105,7 @@ void processNumInput(int *num_input){
         printf("Không thể mở file.\n");
     }
 
-    char line[256]; // 368 bits + 1 for null terminator
-    //CSRAM csram_input[5][256];
+    char line[256];
     int i = 0;
     while (fgets(line, sizeof(line), file) != NULL) {
         num_input[i]=atoi(line);
@@ -132,16 +118,15 @@ void processNumInput(int *num_input){
 
 void processInput(unsigned int *input[10][4], int tb_num_input[], int *num_input[10]){
     FILE* file = fopen("tb_input.txt", "r");
+    FILE* file1 = fopen("input.txt", "w");
     if (file == NULL) {
         printf("Không thể mở file.\n");
     }
     for(int i=0;i<10;i++){
         char line[256]; // 368 bits + 1 for null terminator
-        //CSRAM csram_input[5][256];
         for(int j = 0;j<tb_num_input[i];j++){
             if (fgets(line, sizeof(line), file) != NULL) {
                 int core = bitsToUnsignedInt(line ,9);
-                //printf("%d ", core);
                 if (input[i][core] == NULL) {
                     input[i][core] = malloc(256 * sizeof(int)); // Cấp phát bộ nhớ cho `input[i][j]`
                 }
@@ -152,7 +137,6 @@ void processInput(unsigned int *input[10][4], int tb_num_input[], int *num_input
                     }
                 }
                 input[i][core][num_input[i][core]]=bitsToUnsignedInt(line + 18, 8);
-                //printf("input[%d][%d][%d] = %d ", i, core, num_input[i][core], input[i][core][num_input[i][core]]);
                 num_input[i][core]++;
             } else {
                 break;
@@ -239,6 +223,10 @@ int main() {
     printf("\n");
     unsigned int *input[10][4]={NULL};
     processInput(input, tb_num_input, num_input);
+
+    for(int i = 0; i<num_input[1][0];i++){
+        printf("%d ", input[3][0][i]);
+    }
 
     CSRAM csram_input[5][256];
     char line[371]; // 368 bits + 1 for null terminator
@@ -487,32 +475,14 @@ int main() {
     fclose(file);
     }
 
-
-
-    // printf("csram0 connection: ");
-    // for(int i = 0;i<256;i++){
-    //     printf("%d ", csram_input[0][0].synapse_connection[i]);
-    // }
-
-    // printf("\nsos: %d, %d\n", input[0][0][0], input[0][1][0]);
-    //CSRAM csram_input[5][256]={0};
-    //printf("\n%d\n", csram_input[0][1].dx);
     int output[10][10];
     for(int k = 0; k<10; k++){
         int input_last[256]={0};
         int num_input_last=0;
-        //đọc input
-        //xử lí
-        //int *output=Neuron_Net(csram_input, &input[0][0], num_input);
-        //printf("%d\n", num_input[4]);
         int output_core[5][256]={0};
         for(int i = 0; i<4; i++){
-            //printf("\nnum_input[%d][%d] = %d\n", k, i, num_input[k][i]);
+            
             for(int j = 0; j<64;j++){
-                // printf("\nconnection: ");
-                // for(int m=0;m<256;m++){
-                //     printf("%d", csram_input[i][j].synapse_connection[m]);
-                // }
                 output_core[i][j]=NeuronBlock(&csram_input[i][j], input[k][i], num_input[k][i]);
                 if(output_core[i][j]==1){
                     input_last[num_input_last]=i*64+j;
@@ -520,14 +490,12 @@ int main() {
                 }
             }
         }
-        // printf("so input: %d ", num_input_last);
         for(int i = 0;i<250;i++){
             output_core[4][i]=NeuronBlock(&csram_input[4][i], input_last, num_input_last);
             if(output_core[4][i]==1){
                 output[k][i%10]++;
             }
         }
-        //viết file output_core ra file txt;
         printf("vote voi so %d: ", k);
         for(int j = 0; j<10; j++){
             printf("%d ", output[k][j]);
