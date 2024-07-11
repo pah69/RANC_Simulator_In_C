@@ -87,6 +87,9 @@ int main()
     int *num_input_per_core[10]={NULL};
     unsigned int *input[10][4]={NULL};
     tb_input_to_array(input, tb_num_inputs, num_input_per_core);
+    printf("tb_input_to_aray\n");
+    printf("num_input_per_core[0][0] = %d\n", num_input_per_core[0][0]); // err
+
 
     #if (TEST == 20) 
         // testing the correctness of csram_input array 
@@ -95,11 +98,17 @@ int main()
         
         for (int pic; pic < 10; pic++)
         {        
+            printf("pic %d \n", pic);
             for (int core_index; core_index < 4; core_index++)
             {
+                printf("    core %d, num_input_per_core[%d][%d] = %d\n", core_index, pic, core_index, num_input_per_core[pic][core_index]);
+
                 for (int pic_index = 0; pic_index < num_input_per_core[pic][core_index]; pic_index++)
-                    fprintf(fptr, "input[%d][%d][%d] = %d\n", 
-                    pic, core_index, pic_index, input[pic][core_index][pic_index]);
+                // for (int pic_index = 0; input[pic][core_index][pic_index] != '\0'; pic_index++)
+                {                    
+                    printf("input[%d][%d][%d] = %d\n", pic, core_index, pic_index, input[pic][core_index][pic_index]);
+                    // fprintf(fptr, "input[%d][%d][%d] = %d\n", pic, core_index, pic_index, input[pic][core_index][pic_index]);
+                }                    
             }
         }
 
@@ -108,12 +117,14 @@ int main()
     #endif
 
     CSRAM csram_input[5][256];
+    printf("csram init\n");
     
     csram_to_array("csram_000.mem", csram_input, 0);
     csram_to_array("csram_001.mem", csram_input, 1);
     csram_to_array("csram_002.mem", csram_input, 2);
     csram_to_array("csram_003.mem", csram_input, 3);
     csram_to_array("csram_004.mem", csram_input, 4);
+    printf("all csram funct pass\n");
 
     #if (TEST == 50) 
         // testing the correctness of csram_input array 
@@ -132,7 +143,8 @@ int main()
     #endif
 
     int output[10][10];
-    for(int k = 0; k<10; k++){
+    for(int k = 0; k<10; k++)
+    {
         int input_last[256]={0};
         int num_input_last=0;
         int output_core[5][256]={0};
@@ -301,7 +313,8 @@ void csram_to_array(char *filename, CSRAM csram_input[5][256], unsigned csram_nu
 
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
-        perror("Failed to open file");
+        perror("Failed to open csram file.");
+        printf("Failed to open %s.\n", filename);
         return;
     }
 
@@ -351,10 +364,11 @@ void tb_input_to_array(unsigned int *input[10][4], int tb_num_input[], int *num_
     if (tb_input_p == NULL)
     {
         perror("Failed to open tb_input.txt\n");
+        printf("Failed to open tb_input.txt\n");
         return;
     } 
 
-    for (int pic; pic < 10; pic++)
+    for (int pic = 0; pic < 10; pic++)
     {
         /*
             This loop ensure we get the correct amount of input per picture follow in the
@@ -362,21 +376,30 @@ void tb_input_to_array(unsigned int *input[10][4], int tb_num_input[], int *num_
             It's also track number of input per picture per core with the 
             num_input_per_core array.
         */
-        for (int pic_input_index; pic_input_index < tb_num_input[pic]; pic_input_index++)
+        for (int pic_input_index = 0; pic_input_index < tb_num_input[pic]; pic_input_index++)
         {
             /*
                 In this application, the input only go into dy = 0 so whe can totally just
                 mind dx or in this case it's called core and have range of [0;3] 
             */
-            char line[32];   
+            char line[33];   
             while (fgets(line, sizeof(line), tb_input_p) != NULL)
             {
                 int core = bitsToUnsignedInt(line, 9);
                 if (input[pic][core] == NULL)
                 {
-                    input[pic][core] = malloc(256 * sizeof(int));
-                    for (int pic_input_index = 0; pic_input_index < 256; pic_input_index ++)                    
-                        input[pic][core][pic_input_index] = 0;                    
+                    input[pic][core] = malloc(256 * sizeof(int));         
+
+                    // for (int pic_input_index = 0; pic_input_index < 256; pic_input_index ++)          
+                    // {
+                    //     input[pic][core][pic_input_index] = 0; 
+                    // }       
+
+                    for (int pic_input_index = 0; pic_input_index < (sizeof(input[pic][core]) / sizeof(input[pic][core][0])); pic_input_index ++)          
+                    {
+                        input[pic][core][pic_input_index] = 0; 
+                    }  
+                                           
                 }
 
                 if (num_input_per_core[pic] == NULL)
